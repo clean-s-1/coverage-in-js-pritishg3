@@ -1,34 +1,35 @@
 
+const mapOfCoolingType = {
+  PASSIVE_COOLING: [0, 35],
+  HI_ACTIVE_COOLING: [0, 45],
+  MED_ACTIVE_COOLING: [0, 40],
+};
+
 function inferBreach(value, lowerLimit, upperLimit) {
-  if (value < lowerLimit) {
-    return 'TOO_LOW';
-  }
-  if (value > upperLimit) {
-    return 'TOO_HIGH';
-  }
-  return 'NORMAL';
+  return (value < lowerLimit) ? 'TOO_LOW' : (value > upperLimit) ? 'TOO_HIGH' : 'NORMAL';
+}
+
+function setUpperLowerLimit(coolingType) {
+  let lowerLimit = 0;
+  let upperLimit = 0;
+  [lowerLimit, upperLimit] = mapOfCoolingType[coolingType];
+  return [lowerLimit, upperLimit];
 }
 
 function classifyTemperatureBreach(coolingType, temperatureInC) {
   let lowerLimit = 0;
   let upperLimit = 0;
-  if (coolingType == 'PASSIVE_COOLING') {
-    lowerLimit = 0;
-    upperLimit = 35;
-  } else if (coolingType == 'HI_ACTIVE_COOLING') {
-    lowerLimit = 0;
-    upperLimit = 45;
-  } else if (coolingType == 'MED_ACTIVE_COOLING') {
-    lowerLimit = 0;
-    upperLimit = 40;
-  }
+  [lowerLimit, upperLimit] = setUpperLowerLimit(coolingType);
   return inferBreach(temperatureInC, lowerLimit, upperLimit);
 }
 
 function checkAndAlert(alertTarget, batteryChar, temperatureInC) {
-  const breachType = classifyTemperatureBreach(batteryChar['coolingType'], temperatureInC);
+  const breachType = classifyTemperatureBreach(
+      batteryChar['coolingType'],
+      temperatureInC,
+  );
   if (alertTarget == 'TO_CONTROLLER') {
-    sendToController(breachType);
+    console.log(sendToController(breachType));
   } else if (alertTarget == 'TO_EMAIL') {
     sendToEmail(breachType);
   }
@@ -36,7 +37,7 @@ function checkAndAlert(alertTarget, batteryChar, temperatureInC) {
 
 function sendToController(breachType) {
   const header = 0xfeed;
-  console.log(`${header}, ${breachType}`);
+  return (`${header}, ${breachType}`);
 }
 
 function sendToEmail(breachType) {
@@ -50,5 +51,13 @@ function sendToEmail(breachType) {
   }
 }
 
-module.exports =
-    {inferBreach, classifyTemperatureBreach, checkAndAlert, sendToController, sendToEmail};
+checkAndAlert('TO_CONTROLLER', {'coolingType': 'PASSIVE_COOLING'}, 20);
+
+module.exports = {
+  inferBreach,
+  classifyTemperatureBreach,
+  checkAndAlert,
+  sendToController,
+  sendToEmail,
+  setUpperLowerLimit,
+};
