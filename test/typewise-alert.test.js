@@ -1,5 +1,11 @@
 const alerts = require('../typewise-alert');
+const chai = require('chai');
 const {expect} = require('chai');
+
+const spies = require('chai-spies');
+
+chai.use(spies);
+
 
 /** Testing the inferBreach issue.  */
 it('infers a value lower than the minimum as TOO_LOW', () => {
@@ -27,7 +33,18 @@ it('classifies a value between min and max temperature as NORMAL', () => {
   expect(alerts.classifyTemperatureBreach('PASSIVE_COOLING', 20)).equals('NORMAL');
 });
 
-it('Send to controller test', () => {
-  expect(alerts.sendToController('TOO_LOW')).equals('65261, TOO_LOW');
+/** Testing send to email */
+it('sends a message to the email', () => {
+  const spy = chai.spy.on(alerts, 'sendToEmail');
+  alerts.sendToEmail('TOO_HIGH');
+  expect(spy).to.have.been.called.with('TOO_HIGH');
 });
 
+/** Testing the check and alert functionality */
+it('Test Checkandalert', () => {
+  const spy = chai.spy.on(alerts, 'sendToController');
+  alerts.checkAndAlert('TO_CONTROLLER', {coolingType: 'PASSIVE_COOLING'}, 20, {
+    'TO_CONTROLLER': alerts.sendToController,
+  });
+  expect(spy).to.have.been.called.with('NORMAL');
+});
